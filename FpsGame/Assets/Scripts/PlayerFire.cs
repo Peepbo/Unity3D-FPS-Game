@@ -32,6 +32,12 @@ public class PlayerFire : MonoBehaviour
                 print(hit.collider.name);
 
                 Instantiate(effect, hit.point, Quaternion.LookRotation(hit.normal));
+
+                if(hit.collider.tag == "Enemy")
+                {
+                    hit.collider.GetComponent<Enemy>().Damaged();
+                    hit.collider.GetComponent<EnemyFSM>().animTrigger("damaged");
+                }
             }
 
             //유니티 최적화
