@@ -12,6 +12,12 @@ public class PlayerFire : MonoBehaviour
 
     public GameObject bomb_prefab;
     public Transform firePoint;
+
+    private void Start()
+    {
+        gun_anim = GameObject.Find("Gun").GetComponent<Animator>();
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -24,11 +30,12 @@ public class PlayerFire : MonoBehaviour
     {
         if (Input.GetButtonDown("Fire1"))
         {
+            gun_anim.SetTrigger("shot");
+
             RaycastHit hit;
 
             if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, 100f))
             {
-                gun_anim.SetTrigger("Fire");
                 print(hit.collider.name);
 
                 Instantiate(effect, hit.point, Quaternion.LookRotation(hit.normal));
@@ -36,7 +43,6 @@ public class PlayerFire : MonoBehaviour
                 if(hit.collider.tag == "Enemy")
                 {
                     hit.collider.GetComponent<Enemy>().Damaged();
-                    hit.collider.GetComponent<EnemyFSM>().animTrigger("damaged");
                 }
             }
 
@@ -68,18 +74,18 @@ public class PlayerFire : MonoBehaviour
             //이런식이면 if문이 더 많이 들어가게 된다.
         }
 
-        if(Input.GetButtonDown("Fire2"))
-        {
-            //수류탄 생성
-            GameObject bomb = Instantiate(bomb_prefab, firePoint.position, Quaternion.identity);
-            Rigidbody rigid = bomb.GetComponent<Rigidbody>();
+        //if(Input.GetButtonDown("Fire2"))
+        //{
+        //    //수류탄 생성
+        //    GameObject bomb = Instantiate(bomb_prefab, firePoint.position, Quaternion.identity);
+        //    Rigidbody rigid = bomb.GetComponent<Rigidbody>();
 
-            //rigid.AddForce(Camera.main.transform.forward * 25f, ForceMode.Impulse);
+        //    //rigid.AddForce(Camera.main.transform.forward * 25f, ForceMode.Impulse);
 
-            //45도 각도로 발사
-            Vector3 dir = Camera.main.transform.forward + Camera.main.transform.up * 2;
-            dir.Normalize();
-            rigid.AddForce(dir * 25f, ForceMode.Impulse);
-        }
+        //    //45도 각도로 발사
+        //    Vector3 dir = Camera.main.transform.forward + Camera.main.transform.up * 2;
+        //    dir.Normalize();
+        //    rigid.AddForce(dir * 25f, ForceMode.Impulse);
+        //}
     }
 }

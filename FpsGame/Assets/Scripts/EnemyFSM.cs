@@ -30,6 +30,7 @@ public class EnemyFSM : MonoBehaviour
     #endregion
 
     #region "Attack 상태에 필요한 변수들"
+    Coroutine atkCoru;
     #endregion
 
     #region "Damaged 상태에 필요한 변수들"
@@ -38,6 +39,12 @@ public class EnemyFSM : MonoBehaviour
 
     #region "Die 상태에 필요한 변수들"
     #endregion
+
+    public void EnemDie()
+    {
+        //transform.LookAt(Target.transform);
+        state = EnemyState.Die;
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -97,21 +104,28 @@ public class EnemyFSM : MonoBehaviour
             //transform.eulerAngles = new Vector3(0, dir.y, 0);
 
             //transform.LookAt(Target.transform.position);
-
+            anim.SetInteger("state", 1);
             state = EnemyState.Move;
         }
     }
 
     private void Move()
     {
-        //animation
-        anim.SetInteger("state", 1);
-
         float distance = Vector3.Distance(enem.defaultPos, Target.transform.position);
 
         //follow
         if (distance < enem.followDistance)
         {
+
+            float targetDistance = (transform.position - Target.transform.position).sqrMagnitude;
+            if(targetDistance < 30f)
+            {
+                anim.SetInteger("state", 2);
+                state = EnemyState.Attack;
+
+                atkCoru = StartCoroutine(fireDelay());
+            }
+
             transform.LookAt(Target.transform);
 
             Vector3 dir = (Target.transform.position - transform.position).normalized;
@@ -126,121 +140,54 @@ public class EnemyFSM : MonoBehaviour
             Vector3 dir = (enem.defaultPos - transform.position).normalized;
             cc.Move(dir * enem.speed * Time.deltaTime);
 
-            if(Vector3.Distance(transform.position,enem.defaultPos) < 1.0f)
+            if (Vector3.Distance(transform.position, enem.defaultPos) < 1.0f)
             {
                 anim.SetInteger("state", 0);
                 state = EnemyState.Idle;
             }
         }
 
-        //Move -> Attack
-        //Move -> Return
+        if (cc.isGrounded == false) cc.Move(Vector3.down * 50f);
+    }
 
-        //use to Character Controller
+    IEnumerator fireDelay()
+    {
+        //2.22
+        //while(true)
+        //{
+        //    yield return new WaitForSeconds(1);
+        //    enem.Fire();
+        //    yield return new WaitForSeconds(1);
 
-        //각도를 먼저 구하고 lerp를 사용하여 해당 각도로 회전
+        //    float distance = Vector3.Distance(transform.position, Target.transform.position);
+        //    if (distance > 30f)
+        //    {
+        //        anim.SetInteger("state", 1);
+        //        state = EnemyState.Move;
+        //        atkCoru = null;
 
-        Vector3 dirToTarget = Target.transform.position - transform.position;
-        Vector3 look = Vector3.Slerp(transform.forward, dirToTarget.normalized, Time.deltaTime);
+        //        break;
+        //    }
+        //}
 
-        transform.rotation = Quaternion.LookRotation(look, Vector3.up);
+        yield return new WaitForSeconds(1);
+        enem.Fire();
+        yield return new WaitForSeconds(1);
 
-        //transform.LookAt(Target.transform.position);
-
-        if (distance > enem.followDistance)
+        float distance = Vector3.Distance(transform.position, Target.transform.position);
+        if (distance > 30f)
         {
-            //return
-            Vector3 dirToTarget0 = enem.defaultPos - transform.position;
-            Vector3 look0 = Vector3.Slerp(transform.forward, dirToTarget0.normalized, Time.deltaTime);
-
-            transform.rotation = Quaternion.LookRotation(look, Vector3.up);
-
-            Vector3 dir = (enem.defaultPos - transform.position).normalized;
-            cc.Move(dir * enem.speed * Time.deltaTime);
-        }
-
-        else
-        {
-            if (distance <= 1)
-            {
-                state = EnemyState.Attack;
-            }
-
-            else
-            {
-                //방향 구하기
-
-                //이동
-                Vector3 dir = (Target.transform.position - transform.position).normalized;
-                cc.Move(dir * enem.speed * Time.deltaTime);
-
-                //레이저
-                Vector3 rayDir = (Target.transform.position - enem.defaultPos).normalized;
-                Debug.DrawRay(enem.defaultPos, rayDir * distance, Color.yellow);
-
-                //transform.position = enem.defaultPos;
-                //state = EnemyState.Idle;
-            }
+            anim.SetInteger("state", 1);
+            state = EnemyState.Move;
+            atkCoru = null;
         }
     }
 
     private void Attack()
     {
-        //Attack -> Idle
-        //Attack -> Return
-        //Attack -> Move
-
-        //- 공격범위 1미터
-        //float distance = Vector3.Distance(transform.position, Target.transform.position);
-
-        //if(distance > enem.followDistance)
-        //{
-
-        //}
-    }
-
-    private void Return()
-    {
-        //- 처음 위치에서 30미터
-
-        Vector3 dirToTarget = enem.defaultPos - transform.position;
-        Vector3 look = Vector3.Slerp(transform.forward, dirToTarget.normalized, Time.deltaTime);
-
-        transform.rotation = Quaternion.LookRotation(look, Vector3.up);
-        //transform.LookAt(enem.defaultPos);
-
-        float distance = Vector3.Distance(enem.defaultPos, transform.position);
-        if (distance < 1f)
+        if(anim.GetCurrentAnimatorStateInfo(0).IsName("PA_WarriorAttack_Clip"))
         {
-            transform.position = enem.defaultPos;
-            state = EnemyState.Idle;
+            StartCoroutine(fireDelay());
         }
-
-        else
-        {
-            Vector3 dir = (enem.defaultPos - transform.position).normalized;
-            cc.Move(dir * enem.speed * Time.deltaTime);
-        }
-    }
-
-    //Any State
-    private void Damaged()
-    {
-        //- 코루틴 사용
-        //1. 에너미 체력이 1이상일 때 피격받을 수 있다.
-        //2. 다시 이전상태로 변경되야함
-        //anim.SetTrigger("damaged");
-    }
-
-    public void animTrigger(string name)
-    {
-        //anim.SetTrigger(name);
-    }
-
-    //Any State
-    private void Die()
-    {
-        //- 코루틴 사용
-        //- 체력이 0 이하가 되면 오브젝트 삭제
     }
 }
