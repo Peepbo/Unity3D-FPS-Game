@@ -11,7 +11,7 @@ public class EnemyFSM : MonoBehaviour
     //enemy state
     enum EnemyState
     {
-        Idle, Move, Attack, Damaged, Die
+        Idle, Move, Attack, Return, Damaged, Die
     }
 
     EnemyState state; // enemy state function
@@ -33,6 +33,9 @@ public class EnemyFSM : MonoBehaviour
     Coroutine atkCoru;
     #endregion
 
+    #region "Return 상태에 필요한 변수들"
+    #endregion
+
     #region "Damaged 상태에 필요한 변수들"
     Coroutine damageCoru;
     #endregion
@@ -51,8 +54,7 @@ public class EnemyFSM : MonoBehaviour
     {
         state = EnemyState.Idle;
 
-        anim = GameObject.Find("PA_Warrior").GetComponent<Animator>();
-        
+        anim = transform.parent.GetComponent<Animator>();
         enem = GetComponent<Enemy>();
         Target = GameObject.Find("Player");
         cc = GetComponent<CharacterController>();
@@ -72,10 +74,19 @@ public class EnemyFSM : MonoBehaviour
             case EnemyState.Attack:
                 Attack();
                 break;
+            case EnemyState.Return:
+                Return();
+                break;
+            case EnemyState.Damaged:
+                Damaged();
+                break;
+            case EnemyState.Die:
+                Die();
+                break;
         }
 
         //print(state);
-        //anim.SetInteger("state", (int)state);
+        anim.SetInteger("state", (int)state);
     }
     private void Idle()
     {
@@ -102,15 +113,21 @@ public class EnemyFSM : MonoBehaviour
             //해당 방향 바라보기
             //transform.eulerAngles = new Vector3(0, angleX, 0);
             //transform.eulerAngles = new Vector3(0, dir.y, 0);
+<<<<<<< .merge_file_a13944
 
             //transform.LookAt(Target.transform.position);
             anim.SetInteger("state", 1);
+=======
+            transform.LookAt(Target.transform.position);
+
+>>>>>>> .merge_file_a29188
             state = EnemyState.Move;
         }
     }
 
     private void Move()
     {
+<<<<<<< .merge_file_a13944
         float distance = Vector3.Distance(enem.defaultPos, Target.transform.position);
 
         //follow
@@ -148,6 +165,41 @@ public class EnemyFSM : MonoBehaviour
         }
 
         if (cc.isGrounded == false) cc.Move(Vector3.down * 50f);
+=======
+        //Move -> Attack
+        //Move -> Return
+
+        //use to Character Controller
+
+        transform.LookAt(Target.transform.position);
+
+        float distance = Vector3.Distance(enem.defaultPos, Target.transform.position);
+        if (distance > enem.followDistance)
+        {
+            state = EnemyState.Return;
+        }
+
+        else
+        {
+            if (distance <= 1)
+            {
+                state = EnemyState.Attack;
+            }
+
+            else
+            {
+                //방향 구하기
+
+                //이동
+                Vector3 dir = (Target.transform.position - transform.position).normalized;
+                cc.Move(dir * enem.speed * Time.deltaTime);
+
+                //레이저
+                Vector3 rayDir = (Target.transform.position - enem.defaultPos).normalized;
+                Debug.DrawRay(enem.defaultPos, rayDir * distance, Color.yellow);
+            }
+        }
+>>>>>>> .merge_file_a29188
     }
 
     IEnumerator fireDelay()
@@ -169,6 +221,15 @@ public class EnemyFSM : MonoBehaviour
         //        break;
         //    }
         //}
+<<<<<<< .merge_file_a13944
+=======
+    }
+
+    private void Return()
+    {
+        //- 처음 위치에서 30미터
+        transform.LookAt(enem.defaultPos);
+>>>>>>> .merge_file_a29188
 
         yield return new WaitForSeconds(1);
         enem.Fire();
@@ -183,7 +244,26 @@ public class EnemyFSM : MonoBehaviour
         }
     }
 
+<<<<<<< .merge_file_a13944
     private void Attack()
+=======
+    //Any State
+    private void Damaged()
+    {
+        //- 코루틴 사용
+        //1. 에너미 체력이 1이상일 때 피격받을 수 있다.
+        //2. 다시 이전상태로 변경되야함
+        //anim.SetTrigger("damaged");
+    }
+
+    public void animTrigger(string name)
+    {
+        anim.SetTrigger(name);
+    }
+
+    //Any State
+    private void Die()
+>>>>>>> .merge_file_a29188
     {
         if(anim.GetCurrentAnimatorStateInfo(0).IsName("PA_WarriorAttack_Clip"))
         {
