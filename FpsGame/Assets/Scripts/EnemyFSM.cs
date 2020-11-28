@@ -11,7 +11,7 @@ public class EnemyFSM : MonoBehaviour
     //enemy state
     enum EnemyState
     {
-        Idle, Move, Attack, Damaged, Die
+        Idle, Move, Attack, Return, Damaged, Die
     }
 
     EnemyState state; // enemy state function
@@ -32,6 +32,9 @@ public class EnemyFSM : MonoBehaviour
     #region "Attack 상태에 필요한 변수들"
     #endregion
 
+    #region "Return 상태에 필요한 변수들"
+    #endregion
+
     #region "Damaged 상태에 필요한 변수들"
     Coroutine damageCoru;
     #endregion
@@ -44,8 +47,7 @@ public class EnemyFSM : MonoBehaviour
     {
         state = EnemyState.Idle;
 
-        anim = GameObject.Find("PA_Warrior").GetComponent<Animator>();
-        
+        anim = transform.parent.GetComponent<Animator>();
         enem = GetComponent<Enemy>();
         Target = GameObject.Find("Player");
         cc = GetComponent<CharacterController>();
@@ -65,10 +67,19 @@ public class EnemyFSM : MonoBehaviour
             case EnemyState.Attack:
                 Attack();
                 break;
+            case EnemyState.Return:
+                Return();
+                break;
+            case EnemyState.Damaged:
+                Damaged();
+                break;
+            case EnemyState.Die:
+                Die();
+                break;
         }
 
         //print(state);
-        //anim.SetInteger("state", (int)state);
+        anim.SetInteger("state", (int)state);
     }
     private void Idle()
     {
@@ -95,8 +106,7 @@ public class EnemyFSM : MonoBehaviour
             //해당 방향 바라보기
             //transform.eulerAngles = new Vector3(0, angleX, 0);
             //transform.eulerAngles = new Vector3(0, dir.y, 0);
-
-            //transform.LookAt(Target.transform.position);
+            transform.LookAt(Target.transform.position);
 
             state = EnemyState.Move;
         }
@@ -104,59 +114,17 @@ public class EnemyFSM : MonoBehaviour
 
     private void Move()
     {
-        //animation
-        anim.SetInteger("state", 1);
-
-        float distance = Vector3.Distance(enem.defaultPos, Target.transform.position);
-
-        //follow
-        if (distance < enem.followDistance)
-        {
-            transform.LookAt(Target.transform);
-
-            Vector3 dir = (Target.transform.position - transform.position).normalized;
-            cc.Move(dir * enem.speed * Time.deltaTime);
-        }
-
-        //unfollow
-        else
-        {
-            transform.LookAt(enem.defaultPos);
-
-            Vector3 dir = (enem.defaultPos - transform.position).normalized;
-            cc.Move(dir * enem.speed * Time.deltaTime);
-
-            if(Vector3.Distance(transform.position,enem.defaultPos) < 1.0f)
-            {
-                anim.SetInteger("state", 0);
-                state = EnemyState.Idle;
-            }
-        }
-
         //Move -> Attack
         //Move -> Return
 
         //use to Character Controller
 
-        //각도를 먼저 구하고 lerp를 사용하여 해당 각도로 회전
+        transform.LookAt(Target.transform.position);
 
-        Vector3 dirToTarget = Target.transform.position - transform.position;
-        Vector3 look = Vector3.Slerp(transform.forward, dirToTarget.normalized, Time.deltaTime);
-
-        transform.rotation = Quaternion.LookRotation(look, Vector3.up);
-
-        //transform.LookAt(Target.transform.position);
-
+        float distance = Vector3.Distance(enem.defaultPos, Target.transform.position);
         if (distance > enem.followDistance)
         {
-            //return
-            Vector3 dirToTarget0 = enem.defaultPos - transform.position;
-            Vector3 look0 = Vector3.Slerp(transform.forward, dirToTarget0.normalized, Time.deltaTime);
-
-            transform.rotation = Quaternion.LookRotation(look, Vector3.up);
-
-            Vector3 dir = (enem.defaultPos - transform.position).normalized;
-            cc.Move(dir * enem.speed * Time.deltaTime);
+            state = EnemyState.Return;
         }
 
         else
@@ -177,9 +145,6 @@ public class EnemyFSM : MonoBehaviour
                 //레이저
                 Vector3 rayDir = (Target.transform.position - enem.defaultPos).normalized;
                 Debug.DrawRay(enem.defaultPos, rayDir * distance, Color.yellow);
-
-                //transform.position = enem.defaultPos;
-                //state = EnemyState.Idle;
             }
         }
     }
@@ -202,12 +167,7 @@ public class EnemyFSM : MonoBehaviour
     private void Return()
     {
         //- 처음 위치에서 30미터
-
-        Vector3 dirToTarget = enem.defaultPos - transform.position;
-        Vector3 look = Vector3.Slerp(transform.forward, dirToTarget.normalized, Time.deltaTime);
-
-        transform.rotation = Quaternion.LookRotation(look, Vector3.up);
-        //transform.LookAt(enem.defaultPos);
+        transform.LookAt(enem.defaultPos);
 
         float distance = Vector3.Distance(enem.defaultPos, transform.position);
         if (distance < 1f)
@@ -234,7 +194,7 @@ public class EnemyFSM : MonoBehaviour
 
     public void animTrigger(string name)
     {
-        //anim.SetTrigger(name);
+        anim.SetTrigger(name);
     }
 
     //Any State
