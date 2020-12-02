@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class EnemyFSM : MonoBehaviour
 {
@@ -21,6 +22,8 @@ public class EnemyFSM : MonoBehaviour
     CharacterController cc;
 
     Animator anim;
+
+    bool isAtk = false;
 
     //usefull
     #region "Idle 상태에 필요한 변수들"
@@ -42,7 +45,7 @@ public class EnemyFSM : MonoBehaviour
 
     public void EnemDie()
     {
-        //transform.LookAt(Target.transform);
+        anim.SetTrigger("die");
         state = EnemyState.Die;
     }
 
@@ -72,13 +75,33 @@ public class EnemyFSM : MonoBehaviour
             case EnemyState.Attack:
                 Attack();
                 break;
+            case EnemyState.Damaged:
+                Damaged();
+                break;
         }
 
         //print(state);
         //anim.SetInteger("state", (int)state);
     }
+
+    public void DamagedAnim()
+    {
+        anim.SetTrigger("hit");
+        state = EnemyState.Damaged;
+    }
+
+    private void Damaged()
+    {
+        if(anim.GetCurrentAnimatorStateInfo(0).normalizedTime % 1 >= 0.9f)
+        {
+            anim.SetInteger("state", 0);
+            state = EnemyState.Idle;
+        }
+    }
+
     private void Idle()
     {
+        if (anim.GetCurrentAnimatorStateInfo(0).IsName("PA_WarriorIdle_Clip") == false) return;
         //Idle -> Move
 
         // 1. 플레이어와 일정범위가 되면 이동상태로 변경 (탐지범위)
@@ -122,8 +145,6 @@ public class EnemyFSM : MonoBehaviour
             {
                 anim.SetInteger("state", 2);
                 state = EnemyState.Attack;
-
-                atkCoru = StartCoroutine(fireDelay());
             }
 
             transform.LookAt(Target.transform);
@@ -150,32 +171,15 @@ public class EnemyFSM : MonoBehaviour
         if (cc.isGrounded == false) cc.Move(Vector3.down * 50f);
     }
 
-    IEnumerator fireDelay()
+    void fire()
     {
-        //2.22
-        //while(true)
-        //{
-        //    yield return new WaitForSeconds(1);
-        //    enem.Fire();
-        //    yield return new WaitForSeconds(1);
+        isAtk = true;
 
-        //    float distance = Vector3.Distance(transform.position, Target.transform.position);
-        //    if (distance > 30f)
-        //    {
-        //        anim.SetInteger("state", 1);
-        //        state = EnemyState.Move;
-        //        atkCoru = null;
-
-        //        break;
-        //    }
-        //}
-
-        yield return new WaitForSeconds(1);
         enem.Fire();
-        yield return new WaitForSeconds(1);
-
         float distance = Vector3.Distance(transform.position, Target.transform.position);
-        if (distance > 30f)
+        print(distance);
+        
+        if (distance > 5.5f)
         {
             anim.SetInteger("state", 1);
             state = EnemyState.Move;
@@ -185,9 +189,12 @@ public class EnemyFSM : MonoBehaviour
 
     private void Attack()
     {
-        if(anim.GetCurrentAnimatorStateInfo(0).IsName("PA_WarriorAttack_Clip"))
+        if(anim.GetCurrentAnimatorStateInfo(0).normalizedTime % 1 >= 0.5f
+            && anim.GetCurrentAnimatorStateInfo(0).normalizedTime % 1 <= 0.6f)
         {
-            StartCoroutine(fireDelay());
+            if(!isAtk) fire();
         }
+
+        if (anim.GetCurrentAnimatorStateInfo(0).normalizedTime % 1 >= 0.95f) isAtk = false;
     }
 }

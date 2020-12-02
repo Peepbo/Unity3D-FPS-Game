@@ -19,7 +19,7 @@ public class Enemy : MonoBehaviour
     private void Start()
     {
         defaultPos = transform.position;
-        atkPos = transform.Find("AtkPos");
+        atkPos = GameObject.Find("shotPos").transform;
         anim = GetComponentInChildren<Animator>();
     }
 
@@ -31,16 +31,6 @@ public class Enemy : MonoBehaviour
         Vector3 dir = transform.forward.normalized;
 
         rigid.AddForce(dir * 20f, ForceMode.Impulse);
-        /*
-         * 
-         *    Vector3 dir = Camera.main.transform.forward + Camera.main.transform.up * 2;
-        //    dir.Normalize();
-        //    rigid.AddForce(dir * 25f, ForceMode.Impulse);
-         * 
-         */
-        //Vector3 dir = transform.forward + transform.up * 2;
-        //dir.Normalize();
-        //rigid.AddForce(dir * 20f, ForceMode.Impulse);
     }
 
     public void Damaged()
@@ -49,19 +39,20 @@ public class Enemy : MonoBehaviour
 
         hp--;
 
+        EnemyFSM FSM = GetComponent<EnemyFSM>();
+
         if (hp <= 0)
         {
             isDie = true;
 
-            anim.SetTrigger("die");
+            FSM.EnemDie();
 
-            GetComponent<EnemyFSM>().EnemDie();
             Destroy(gameObject, 3f);
         }
 
         else
         {
-            anim.SetTrigger("hit");
+            FSM.DamagedAnim();
         }
     }
 }
