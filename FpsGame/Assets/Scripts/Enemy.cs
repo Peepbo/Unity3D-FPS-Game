@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-    public GameObject bullet;
+    //public GameObject bullet;
 
     private Transform atkPos;
     private Animator anim;
@@ -25,21 +25,38 @@ public class Enemy : MonoBehaviour
 
     public void Fire()
     {
-        GameObject prefab = Instantiate(bullet, atkPos.position, Quaternion.identity);
-        Rigidbody rigid = prefab.GetComponent<Rigidbody>();
+        //GameObject prefab = Instantiate(bullet, atkPos.position, Quaternion.identity);
+        //Rigidbody rigid = prefab.GetComponent<Rigidbody>();
 
-        Vector3 dir = transform.forward.normalized;
+        //Vector3 dir = transform.forward.normalized;
 
-        rigid.AddForce(dir * 20f, ForceMode.Impulse);
+        //rigid.AddForce(dir * 20f, ForceMode.Impulse);
+
+        GameObject bullet = ObjectPooler.SharedInstance.GetPooledObject("Enemy Bullet");
+
+        if(bullet != null)
+        {
+            bullet.transform.position = transform.position;
+            bullet.transform.rotation = transform.rotation;
+
+            bullet.SetActive(true);
+
+            Rigidbody rigid = bullet.GetComponent<Rigidbody>();
+
+            Vector3 dir = transform.forward.normalized;
+
+            rigid.AddForce(dir * 20f, ForceMode.Impulse);
+        }
     }
 
     public void Damaged()
     {
-        if (isDie) return;
+        EnemyFSM FSM = GetComponent<EnemyFSM>();
+
+        if (isDie || FSM.isDamaged()) return;
 
         hp--;
 
-        EnemyFSM FSM = GetComponent<EnemyFSM>();
 
         if (hp <= 0)
         {
@@ -54,5 +71,11 @@ public class Enemy : MonoBehaviour
         {
             FSM.DamagedAnim();
         }
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(defaultPos, followDistance);
     }
 }

@@ -25,6 +25,8 @@ public class EnemyFSM : MonoBehaviour
 
     bool isAtk = false;
 
+    NavMeshAgent nav;
+
     //usefull
     #region "Idle 상태에 필요한 변수들"
     #endregion
@@ -59,6 +61,12 @@ public class EnemyFSM : MonoBehaviour
         enem = GetComponent<Enemy>();
         Target = GameObject.Find("Player");
         cc = GetComponent<CharacterController>();
+        nav = GetComponent<NavMeshAgent>();
+    }
+
+    private void FixedUpdate()
+    {
+
     }
 
     // Update is called once per frame
@@ -82,12 +90,18 @@ public class EnemyFSM : MonoBehaviour
 
         //print(state);
         //anim.SetInteger("state", (int)state);
+        //nav.SetDestination(Target.transform.position);
     }
 
     public void DamagedAnim()
     {
         anim.SetTrigger("hit");
         state = EnemyState.Damaged;
+    }
+
+    public bool isDamaged()
+    {
+        return state == EnemyState.Damaged;
     }
 
     private void Damaged()
@@ -147,22 +161,29 @@ public class EnemyFSM : MonoBehaviour
                 state = EnemyState.Attack;
             }
 
-            transform.LookAt(Target.transform);
+            //transform.LookAt(Target.transform);
 
-            Vector3 dir = (Target.transform.position - transform.position).normalized;
-            cc.Move(dir * enem.speed * Time.deltaTime);
+            //Vector3 dir = (Target.transform.position - transform.position).normalized;
+            //cc.Move(dir * enem.speed * Time.deltaTime);
+
+            nav.SetDestination(Target.transform.position);
         }
 
         //unfollow
         else
         {
-            transform.LookAt(enem.defaultPos);
+            //transform.LookAt(enem.defaultPos);
 
-            Vector3 dir = (enem.defaultPos - transform.position).normalized;
-            cc.Move(dir * enem.speed * Time.deltaTime);
+            //Vector3 dir = (enem.defaultPos - transform.position).normalized;
+            //cc.Move(dir * enem.speed * Time.deltaTime);
+
+            nav.SetDestination(enem.defaultPos);
 
             if (Vector3.Distance(transform.position, enem.defaultPos) < 1.0f)
             {
+                transform.position = enem.defaultPos;
+                transform.rotation = Quaternion.identity;
+
                 anim.SetInteger("state", 0);
                 state = EnemyState.Idle;
             }
