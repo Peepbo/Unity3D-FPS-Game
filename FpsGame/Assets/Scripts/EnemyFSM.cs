@@ -210,7 +210,9 @@ public class EnemyFSM : MonoBehaviour
 
     private void Attack()
     {
-        if(anim.GetCurrentAnimatorStateInfo(0).normalizedTime % 1 >= 0.5f
+        nav.velocity = Vector3.zero;
+
+        if (anim.GetCurrentAnimatorStateInfo(0).normalizedTime % 1 >= 0.5f
             && anim.GetCurrentAnimatorStateInfo(0).normalizedTime % 1 <= 0.6f)
         {
             if(!isAtk) fire();
