@@ -35,6 +35,8 @@ public class PlayerMove : MonoBehaviour
         //따라서 충돌감지를 하기위해서는 반드시 캐릭터 컨트롤러
         //무브할수로 이동처리해야 한다.
 
+
+
         if(cc.isGrounded)
         {
             float h = Input.GetAxis("Horizontal");
@@ -49,9 +51,10 @@ public class PlayerMove : MonoBehaviour
             //회전된 방향으로 이동
             cc.Move(dir * speed * Time.deltaTime);
 
-            //moveDirection = transform.TransformDirection(moveDirection);
-            //moveDirection *= 6.0f;
-            if (Input.GetButton("Jump")) moveDirection.y = 8.0f;
+            if (Input.GetButton("Jump"))
+            {
+                moveDirection = Vector3.up * 8.0f;
+            }
         }
 
         else
